@@ -1,10 +1,10 @@
 import 'dart:convert';
-import 'package:foursquaretest/models/Place.dart';
-import 'package:http/http.dart' as http;
-import 'package:geolocator/geolocator.dart';
+
 import 'package:app_settings/app_settings.dart';
-import 'package:location_permissions/location_permissions.dart';
 import 'package:flutter/material.dart';
+import 'package:foursquaretest/models/Place.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:http/http.dart' as http;
 import 'package:qr_flutter/qr_flutter.dart';
 
 class PogioCardScreen extends StatefulWidget {
@@ -30,15 +30,12 @@ class _PogioCardScreenState extends State<PogioCardScreen>
   }
 
   Future<bool> _claimRewards() async {
-    PermissionStatus permission = await LocationPermissions().checkPermissionStatus();
+    GeolocationStatus permission =
+        await Geolocator().checkGeolocationPermissionStatus();
 
-    if (permission == PermissionStatus.unknown) {
-      permission = await LocationPermissions().requestPermissions();
-    }
-
-    if (permission == PermissionStatus.granted) {
-      Position position = await Geolocator().getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high);
+    if (permission == GeolocationStatus.granted) {
+      Position position = await Geolocator()
+          .getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
 
       var lat = position.latitude;
       var lng = position.longitude;
@@ -46,31 +43,45 @@ class _PogioCardScreenState extends State<PogioCardScreen>
       const clientId = '<CLIENT_ID>';
       const clientSecret = '<CLIENT_SECRET>';
 
-      final reqUrl = 'https://api.foursquare.com/v2/venues/explore?client_id=$clientId&client_secret=$clientSecret&v=20180323&limit=1&ll=$lat,$lng';
+      final reqUrl =
+          'https://api.foursquare.com/v2/venues/explore?client_id=$clientId&client_secret=$clientSecret&v=20180323&limit=1&ll=$lat,$lng';
 
-      final resp = await http.get(reqUrl);
-      final data = List.from(json.decode(resp.body)['response']['groups']).map((p) => Place.fromMap(p)).toList();
-
-      return data.length > 0;
+      try {
+        final resp = await http.get(reqUrl);
+        final data = List.from(json.decode(resp.body)['response']['groups'])
+            .map((p) => Place.fromMap(p))
+            .toList();
+        return data.length > 0;
+      } catch (e) {
+        print('e: $e');
+        return false;
+      }
     } else {
-      showDialog(context: context, builder: (context) =>
-          AlertDialog(title: Text('Foursquare Test'),
-              content: Text(
-                  'Please allow getting your location in the settings.'),
-              actions: [
-                FlatButton(child: Text('Open Settings'), onPressed: () {
-                  AppSettings.openAppSettings();
-                }),
-                FlatButton(child: Text('Later'), onPressed: () {
-                  Navigator.of(context).pop();
-                })
-              ]));
+      showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+                  title: Text('Foursquare Test'),
+                  content: Text(
+                      'Please allow getting your location in the settings.'),
+                  actions: [
+                    FlatButton(
+                        child: Text('Open Settings'),
+                        onPressed: () {
+                          AppSettings.openAppSettings();
+                          Navigator.of(context).pop();
+                        }),
+                    FlatButton(
+                        child: Text('Later'),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        })
+                  ]));
 
       return false;
     }
   }
 
-  _showDialog() async  {
+  _showDialog() async {
     var result = await _claimRewards();
 
     if (!result) {
@@ -79,55 +90,53 @@ class _PogioCardScreenState extends State<PogioCardScreen>
 
     showDialog(
         context: context,
-        builder: (context) =>
-            AlertDialog(
+        builder: (context) => AlertDialog(
                 content: Container(
                     child: Column(
-                      mainAxisSize: MainAxisSize.min,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Padding(
-                          padding: const EdgeInsets.all(10.0),
-                          child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.star_border, color: Colors.black38),
-                                Icon(
-                                  Icons.star_border,
-                                  size: 100,
-                                  color: Colors.black54,
-                                ),
-                                Icon(Icons.star_border, color: Colors.black38)
-                              ]),
+                        Icon(Icons.star_border, color: Colors.black38),
+                        Icon(
+                          Icons.star_border,
+                          size: 100,
+                          color: Colors.black54,
                         ),
-                        Text(
-                          'Congratulations!',
-                          style: TextStyle(
-                              fontSize: 22, fontWeight: FontWeight.bold),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(top: 10, bottom: 10),
-                          child: Text(
-                            'You\'ve complited your first task.\nYou got:',
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                        Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [Text('100'), Icon(Icons.star)]),
-                        Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [Text('100'), Icon(Icons.star)]),
-                        Padding(
-                          padding: const EdgeInsets.only(top: 10),
-                          child: RaisedButton(
-                            child: Text('Collect'),
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                            },
-                          ),
-                        )
-                      ],
-                    ))));
+                        Icon(Icons.star_border, color: Colors.black38)
+                      ]),
+                ),
+                Text(
+                  'Congratulations!',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 10, bottom: 10),
+                  child: Text(
+                    'You\'ve complited your first task.\nYou got:',
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [Text('100'), Icon(Icons.star)]),
+                Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [Text('100'), Icon(Icons.star)]),
+                Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: RaisedButton(
+                    child: Text('Collect'),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                )
+              ],
+            ))));
   }
 
   @override
@@ -155,16 +164,16 @@ class _PogioCardScreenState extends State<PogioCardScreen>
                         width: 250,
                         child: Card(
                             child: Padding(
-                              padding: const EdgeInsets.all(50.0),
-                              child: Center(
-                                  child: Text(
-                                    'Pogio,™️',
-                                    style: TextStyle(
-                                        fontSize: 26,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.orange),
-                                  )),
-                            )),
+                          padding: const EdgeInsets.all(50.0),
+                          child: Center(
+                              child: Text(
+                            'Pogio,™️',
+                            style: TextStyle(
+                                fontSize: 26,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.orange),
+                          )),
+                        )),
                       ),
                       Padding(
                         padding: const EdgeInsets.only(top: 8.0),
@@ -184,20 +193,20 @@ class _PogioCardScreenState extends State<PogioCardScreen>
                 child: TabBarView(controller: _tabController, children: [
                   Container(
                       child: Column(
-                        children: <Widget>[
-                          Expanded(
-                              child: Center(
-                                child: QrImage(
-                                    size: 200,
-                                    version: QrVersions.auto,
-                                    data: 'https://foursquare.com/'),
-                              )),
-                          RaisedButton(
-                            child: Text('Claim Reward'),
-                            onPressed: _showDialog,
-                          ),
-                        ],
+                    children: <Widget>[
+                      Expanded(
+                          child: Center(
+                        child: QrImage(
+                            size: 200,
+                            version: QrVersions.auto,
+                            data: 'https://foursquare.com/'),
                       )),
+                      RaisedButton(
+                        child: Text('Claim Reward'),
+                        onPressed: _showDialog,
+                      ),
+                    ],
+                  )),
                   Icon(Icons.credit_card, size: 250, color: Colors.black38)
                 ]),
               )

@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'bloc/ApplicationBloc.dart';
-import 'bloc/BlocProvider.dart';
 import 'screens/CardsScreen.dart';
 import 'screens/EmptyScreen.dart';
 
@@ -12,18 +10,15 @@ void main() => runApp(MainApp());
 class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<ApplicationBloc>(
-      bloc: ApplicationBloc(),
-      child: MaterialApp(home: MaterialApp(
-        title: '4 Square Test',
-        home: MainContainer(),
-        theme: ThemeData(
-            buttonTheme: ButtonThemeData(
-                colorScheme: ColorScheme.fromSwatch(primarySwatch: MAIN_COLOR),
-                textTheme: ButtonTextTheme.primary),
-            primarySwatch: MAIN_COLOR),
-      )),
-    );
+    return MaterialApp(home: MaterialApp(
+      title: '4 Square Test',
+      home: MainContainer(),
+      theme: ThemeData(
+          buttonTheme: ButtonThemeData(
+              colorScheme: ColorScheme.fromSwatch(primarySwatch: MAIN_COLOR),
+              textTheme: ButtonTextTheme.primary),
+          primarySwatch: MAIN_COLOR),
+    ));
   }
 }
 
